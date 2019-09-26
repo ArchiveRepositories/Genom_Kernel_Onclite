@@ -221,4 +221,8 @@ mbhc_dlkm-y := $(MBHC_OBJS)
 ifeq ($(CONFIG_MSM_EXT_DISPLAY),y)
 obj-$(CONFIG_SND_SOC_MSM_HDMI_CODEC_RX) += hdmi_dlkm.o
 hdmi_dlkm-y := $(HDMICODEC_OBJS)
+
+obj-$(CONFIG_SND_SOC_AW87329) += aw87329_audio_dlkm.o
+aw87329_audio_dlkm-y := $(AW87329_AUDIO_OBJS)
+
 endif
