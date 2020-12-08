@@ -1938,21 +1938,24 @@ TRACE_EVENT(sched_get_nr_running_avg,
 	TP_ARGS(cpu, nr, nr_misfit, nr_max),
 
 	TP_STRUCT__entry(
-		__field( int, cpu)
-		__field( int, nr)
-		__field( int, nr_misfit)
-		__field( int, nr_max)
+		__field( int,	avg			)
+		__field( int,	big_avg			)
+		__field( int,	iowait_avg		)
+		__field( unsigned int,	max_nr		)
+		__field( unsigned int,	big_max_nr	)
 	),
 
 	TP_fast_assign(
-		__entry->cpu = cpu;
-		__entry->nr = nr;
-		__entry->nr_misfit = nr_misfit;
-		__entry->nr_max = nr_max;
+		__entry->avg		= avg;
+		__entry->big_avg	= big_avg;
+		__entry->iowait_avg	= iowait_avg;
+		__entry->max_nr		= max_nr;
+		__entry->big_max_nr	= big_max_nr;
 	),
 
-	TP_printk("cpu=%d nr=%d nr_misfit=%d nr_max=%d",
-		__entry->cpu, __entry->nr, __entry->nr_misfit, __entry->nr_max)
+	TP_printk("avg=%d big_avg=%d iowait_avg=%d max_nr=%u big_max_nr=%u",
+		__entry->avg, __entry->big_avg, __entry->iowait_avg,
+		__entry->max_nr, __entry->big_max_nr)
 );
 
 TRACE_EVENT(core_ctl_eval_need,
