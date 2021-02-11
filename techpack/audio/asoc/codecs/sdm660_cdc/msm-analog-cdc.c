@@ -1,4 +1,4 @@
-/* Copyright (c) 2015-2019, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2015-2020, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -46,15 +46,7 @@
 #define CODEC_DT_MAX_PROP_SIZE			40
 #define MAX_ON_DEMAND_SUPPLY_NAME_LENGTH	64
 #define BUS_DOWN 1
-
-/*********Added by Quanyu.Lee*********/
-/****************Begin****************/
-/*******for the PA working mode*******/
-
 #define K8_MODE_NUM 2
-
-/*****************End*****************/
-/*********Added by Quanyu.Lee*********/
 
 /*
  * 200 Milliseconds sufficient for DSP bring up in the lpass
@@ -81,6 +73,7 @@
 
 #define VOLTAGE_CONVERTER(value, min_value, step_size)\
 	((value - min_value)/step_size)
+#define APR_DEST_QDSP6 1
 
 enum {
 	BOOST_SWITCH = 0,
@@ -2860,12 +2853,7 @@ static int msm_anlg_cdc_lo_dac_event(struct snd_soc_dapm_widget *w,
 			MSM89XX_PMIC_ANALOG_RX_LO_DAC_CTL, 0x08, 0x08);
 		snd_soc_update_bits(codec,
 			MSM89XX_PMIC_ANALOG_RX_LO_DAC_CTL, 0x40, 0x40);
-/*********Added by Quanyu.Lee*********/
-/****************Begin****************/
-/*****for the line out gain issue*****/
-        msleep(5);
-/*****************End*****************/
-/*********Added by Quanyu.Lee*********/
+		msleep(5);
 		break;
 	case SND_SOC_DAPM_POST_PMU:
 		snd_soc_update_bits(codec,
@@ -3253,6 +3241,7 @@ static struct snd_soc_dai_driver msm_anlg_cdc_i2s_dai[] = {
 };
 
 extern unsigned char aw87329_hw_off(void);
+
 static int msm_anlg_cdc_codec_enable_lo_pa(struct snd_soc_dapm_widget *w,
 					   struct snd_kcontrol *kcontrol,
 					   int event)
@@ -4075,8 +4064,13 @@ int msm_anlg_codec_info_create_codec_entry(struct snd_info_entry *codec_root,
 
 	sdm660_cdc_priv->audio_ssr_nb.notifier_call =
 				sdm660_cdc_notifier_service_cb;
-	ret = audio_notifier_register("pmic_analog_cdc",
+	if (apr_get_dest_id("ADSP") == APR_DEST_QDSP6)
+		ret = audio_notifier_register("pmic_analog_cdc",
 				      AUDIO_NOTIFIER_ADSP_DOMAIN,
+				      &sdm660_cdc_priv->audio_ssr_nb);
+	else
+		ret = audio_notifier_register("pmic_analog_cdc",
+				      AUDIO_NOTIFIER_MODEM_DOMAIN,
 				      &sdm660_cdc_priv->audio_ssr_nb);
 	if (ret < 0) {
 		pr_err("%s: Audio notifier register failed ret = %d\n",

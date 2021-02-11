@@ -171,43 +171,51 @@ static void param_set_mask(struct snd_pcm_hw_params *p, int n,
 extern unsigned char aw87329_audio_kspk(void);
 extern unsigned char aw87329_audio_drcv(void);
 extern unsigned char aw87329_audio_off(void);
+
 static int aw87329_kspk_control = 0;
 static int aw87329_drcv_control = 0;
+
 static const char *const ext_kspk_amp_function[] = { "Off", "On" };
 static const char *const ext_drcv_amp_function[] = { "Off", "On" };
-static int ext_kspk_amp_get(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
+
+static int ext_kspk_amp_get(struct snd_kcontrol *kcontrol,
+			struct snd_ctl_elem_value *ucontrol)
 {
 	ucontrol->value.integer.value[0] = aw87329_kspk_control;
-	pr_debug("%s: aw87329_kspk_control = %d\n", __func__,
+	pr_err("%s: aw87329_kspk_control = %d\n", __func__,
 	aw87329_kspk_control);
 	return 0;
 }
-static int ext_kspk_amp_put(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
+
+static int ext_kspk_amp_put(struct snd_kcontrol *kcontrol,
+			struct snd_ctl_elem_value *ucontrol)
 {
 	if(ucontrol->value.integer.value[0] == aw87329_kspk_control)
 		return 1;
 	aw87329_kspk_control = ucontrol->value.integer.value[0];
-	pr_debug("%s: ext_kspk_amp_put = %d\n", __func__,
+	pr_err("%s: ext_kspk_amp_put = %d\n", __func__,
 	aw87329_kspk_control);
 	if(ucontrol->value.integer.value[0]) {
 		aw87329_audio_kspk();
 	} else {
 		aw87329_audio_off();
 	}
-	pr_debug("%s: value.integer.value = %ld\n", __func__,
+	pr_err("%s: value.integer.value = %ld\n", __func__,
 	ucontrol->value.integer.value[0]);
 	return 0;
 }
+
 static int ext_drcv_amp_get(struct snd_kcontrol *kcontrol,
-struct snd_ctl_elem_value *ucontrol)
+			struct snd_ctl_elem_value *ucontrol)
 {
 	ucontrol->value.integer.value[0] = aw87329_drcv_control;
 	pr_err("%s: aw87329_drcv_control = %d\n", __func__,
 	aw87329_drcv_control);
 	return 0;
 }
+
 static int ext_drcv_amp_put(struct snd_kcontrol *kcontrol,
-struct snd_ctl_elem_value *ucontrol)
+			struct snd_ctl_elem_value *ucontrol)
 {
 	aw87329_drcv_control = ucontrol->value.integer.value[0];
 	if(ucontrol->value.integer.value[0] == aw87329_drcv_control)
@@ -1583,7 +1591,7 @@ static void *def_msm8952_wcd_mbhc_cal(void)
 		return NULL;
 
 #define S(X, Y) ((WCD_MBHC_CAL_PLUG_TYPE_PTR(msm8952_wcd_cal)->X) = (Y))
-	S(v_hs_max, 1700);/*modified by Quanyu.Lee at 18/6/4 for more headphone compatibility*/
+	S(v_hs_max, 1700);
 #undef S
 #define S(X, Y) ((WCD_MBHC_CAL_BTN_DET_PTR(msm8952_wcd_cal)->X) = (Y))
 	S(num_btn, WCD_MBHC_DEF_BUTTONS);
@@ -1606,15 +1614,14 @@ static void *def_msm8952_wcd_mbhc_cal(void)
 	 * 210-290 == Button 2
 	 * 360-680 == Button 3
 	 */
-	 /*modified MBHC keys*/
 	btn_low[0] = 75;
 	btn_high[0] = 75;
-	btn_low[1] = 225;  /*formal 150*/
-	btn_high[1] = 225; /*formal 150*/
-	btn_low[2] = 450;  /*formal 225*/
-	btn_high[2] = 450; /*formal 225*/
-	btn_low[3] = 500;  /*formal 450*/
-	btn_high[3] = 500; /*formal 450*/
+	btn_low[1] = 225;
+	btn_high[1] = 225;
+	btn_low[2] = 450;
+	btn_high[2] = 450;
+	btn_low[3] = 500;
+	btn_high[3] = 500;
 	btn_low[4] = 500;
 	btn_high[4] = 500;
 
@@ -2189,12 +2196,13 @@ static struct snd_soc_dai_link msm8952_dai[] = {
 		.ignore_pmdown_time = 1,
 	},
 	{/* hw:x,27 */
-		.name = "MSM8X16 Compress3",
-		.stream_name = "Compress3",
+		.name = "MSM8X16 MultiMedia10",
+		.stream_name = "MultiMedia10",
 		.cpu_dai_name	= "MultiMedia10",
 		.platform_name  = "msm-pcm-dsp.1",
 		.dynamic = 1,
 		.dpcm_playback = 1,
+		.dpcm_capture = 1,
 		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
 			 SND_SOC_DPCM_TRIGGER_POST},
 		.codec_dai_name = "snd-soc-dummy-dai",
@@ -2693,6 +2701,33 @@ static struct snd_soc_dai_link msm8952_dai[] = {
 		.id = MSM_BACKEND_DAI_QUINARY_MI2S_TX,
 		.be_hw_params_fixup = msm_be_hw_params_fixup,
 		.ops = &msm8952_quin_mi2s_be_ops,
+		.ignore_suspend = 1,
+	},
+	/* Proxy Tx BACK END DAI Link */
+	{
+		.name = LPASS_BE_PROXY_TX,
+		.stream_name = "Proxy Capture",
+		.cpu_dai_name = "msm-dai-q6-dev.8195",
+		.platform_name = "msm-pcm-routing",
+		.codec_name = "msm-stub-codec.1",
+		.codec_dai_name = "msm-stub-tx",
+		.no_pcm = 1,
+		.dpcm_capture = 1,
+		.id = MSM_BACKEND_DAI_PROXY_TX,
+		.ignore_suspend = 1,
+	},
+	/* Proxy Rx BACK END DAI Link */
+	{
+		.name = LPASS_BE_PROXY_RX,
+		.stream_name = "Proxy Playback",
+		.cpu_dai_name = "msm-dai-q6-dev.8194",
+		.platform_name = "msm-pcm-routing",
+		.codec_name = "msm-stub-codec.1",
+		.codec_dai_name = "msm-stub-rx",
+		.no_pcm = 1,
+		.dpcm_playback = 1,
+		.id = MSM_BACKEND_DAI_PROXY_RX,
+		.ignore_pmdown_time = 1,
 		.ignore_suspend = 1,
 	},
 };
